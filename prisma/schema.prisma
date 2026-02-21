@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model birds {
+  id             Int             @id @default(autoincrement())
+  name           String
+  cientific_name String
+  description    String          @db.Text
+  created_at     DateTime        @default(now())
+  updated_at     DateTime?
+  deleted_at     DateTime?
+  birdsHabitats  birdsHabitats[]
+}
+
+model habitats {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  created_at    DateTime        @default(now())
+  birdsHabitats birdsHabitats[]
+}
+
+model birdsHabitats {
+  bird_id    Int
+  habitat_id Int
+  bird       birds    @relation(fields: [bird_id], references: [id])
+  habitat    habitats @relation(fields: [habitat_id], references: [id])
+
+  @@id([bird_id, habitat_id])
+  @@map("birds_habitats")
+}
