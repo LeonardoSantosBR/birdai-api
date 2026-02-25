@@ -1,1 +1,1 @@
-export * from './bird-filter';
+export * from './birds-filter';
