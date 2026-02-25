@@ -1,26 +1,39 @@
-import { Injectable } from '@nestjs/common';
-import { CreateBirdDto } from './dto/create-bird.dto';
-import { UpdateBirdDto } from './dto/update-bird.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateBirdDto } from './dto';
+import { UpdateBirdDto } from './dto';
+import { BirdsRepository } from './birds.repository';
+import { birds, Prisma } from '@prisma/client';
 
 @Injectable()
 export class BirdsService {
-  create(createBirdDto: CreateBirdDto) {
-    return 'This action adds a new bird';
+  constructor(private readonly birdsRepository: BirdsRepository) {}
+
+  create(data: CreateBirdDto) {
+    return this.birdsRepository.create({ data });
   }
 
-  findAll() {
-    return `This action returns all birds`;
+  async findAll(params: Prisma.birdsFindManyArgs) {
+    const [rows, count]: [birds[], number] = await Promise.all([
+      this.birdsRepository.findAll(params),
+      this.birdsRepository.count({ where: params.where || {} }),
+    ]);
+    return { rows, count };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bird`;
+  async findOne(id?: number, arg?: Prisma.birdsFindFirstArgs) {
+    if (!id) throw new BadRequestException('Id não enviado.');
+    const where = arg?.where || { id, deleted_at: null };
+    const query = await this.birdsRepository.findOne({ where, ...arg });
+    return query;
   }
 
-  update(id: number, updateBirdDto: UpdateBirdDto) {
-    return `This action updates a #${id} bird`;
+  update(id: number, data: UpdateBirdDto) {
+    if (!id) throw new BadRequestException('Id não enviado.');
+    return this.birdsRepository.update({ where: { id }, data });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} bird`;
+    if (!id) throw new BadRequestException('Id não enviado.');
+    return this.birdsRepository.delete({ where: { id } });
   }
 }

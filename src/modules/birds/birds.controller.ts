@@ -1,7 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
+
 import { BirdsService } from './birds.service';
-import { CreateBirdDto } from './dto/create-bird.dto';
-import { UpdateBirdDto } from './dto/update-bird.dto';
+import { CreateBirdDto } from './dto';
+import { UpdateBirdDto } from './dto';
+import { querySearchBird } from './querys';
+import { Prisma } from '@prisma/client';
+import { birds_filter } from 'src/filters';
+import { pagination_helper } from '../../helpers';
+import { pagination_prisma } from '../../helpers';
 
 @Controller('birds')
 export class BirdsController {
@@ -13,8 +28,27 @@ export class BirdsController {
   }
 
   @Get()
-  findAll() {
-    return this.birdsService.findAll();
+  async findAll(@Query() querys: querySearchBird) {
+    const page = +querys?.page;
+    const limit = +querys?.limit;
+    const orderBy: Prisma.birdsOrderByWithAggregationInput = querys?.order ?? {
+      created_at: 'desc',
+    };
+    const where: Prisma.birdsWhereInput = {
+      deleted_at: null,
+    };
+    const filter: any = birds_filter(querys);
+    if (filter?.length) where.OR = filter;
+    const include: Prisma.birdsInclude = {};
+
+    const data = await this.birdsService.findAll({
+      where,
+      orderBy,
+      include,
+      ...pagination_prisma(limit, page),
+    });
+
+    return pagination_helper(page, limit, data.count, data);
   }
 
   @Get(':id')

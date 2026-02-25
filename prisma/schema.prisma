@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -10,7 +9,7 @@ datasource db {
 model birds {
   id             Int             @id @default(autoincrement())
   name           String
-  cientific_name String
+  cientific_name String          @unique
   description    String          @db.Text
   created_at     DateTime        @default(now())
   updated_at     DateTime?

@@ -7,4 +7,4 @@ import { PrismaModule } from './database';
   controllers: [],
   providers: [],
 })
-export class AppModule { }
+export class AppModule {}

@@ -18,8 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma-push-postgres": "npx prisma db push --schema prisma/schema.prisma",
-    "prisma-generate-postgres": "npx prisma generate --schema prisma/schema.prisma"
+    "prisma-push-postgres": "npx prisma db push",
+    "prisma-generate-postgres": "npx prisma generate"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -27,6 +27,10 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-mariadb": "^7.4.1",
+    "@prisma/adapter-pg": "^7.4.1",
+    "@prisma/client": "^7.4.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
