@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -7,6 +9,8 @@ import {
   Param,
   Delete,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 
 import { BirdsService } from './birds.service';
@@ -17,14 +21,19 @@ import { Prisma } from '@prisma/client';
 import { birds_filter } from 'src/filters';
 import { pagination_helper } from '../../helpers';
 import { pagination_prisma } from '../../helpers';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('birds')
 export class BirdsController {
   constructor(private readonly birdsService: BirdsService) {}
 
   @Post()
-  create(@Body() createBirdDto: CreateBirdDto) {
-    return this.birdsService.create(createBirdDto);
+  @UseInterceptors(FileInterceptor('file'))
+  create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createBirdDto: CreateBirdDto,
+  ) {
+    return this.birdsService.create(file, createBirdDto);
   }
 
   @Get()

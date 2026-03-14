@@ -11,6 +11,7 @@ model birds {
   name           String
   cientific_name String          @unique
   description    String          @db.Text
+  url            String          @db.Text
   created_at     DateTime        @default(now())
   updated_at     DateTime?
   deleted_at     DateTime?

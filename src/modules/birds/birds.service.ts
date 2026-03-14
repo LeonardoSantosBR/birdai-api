@@ -1,15 +1,41 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBirdDto } from './dto';
 import { UpdateBirdDto } from './dto';
 import { BirdsRepository } from './birds.repository';
 import { birds, Prisma } from '@prisma/client';
+import { SupabaseStorageService } from 'src/services';
+import { PrismaService } from 'src/database';
 
 @Injectable()
 export class BirdsService {
-  constructor(private readonly birdsRepository: BirdsRepository) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly birdsRepository: BirdsRepository,
+    private readonly supabaseStorageService: SupabaseStorageService,
+  ) {}
 
-  create(data: CreateBirdDto) {
-    return this.birdsRepository.create({ data });
+  create(file: Express.Multer.File, data: CreateBirdDto) {
+    if (file.mimetype !== 'image/jpeg' && file.mimetype != 'image/png')
+      throw new BadRequestException(
+        `Tipo de imagem ${file.mimetype.split('/')[1]} não aceita.`,
+      );
+
+    const transaction = async (tr: PrismaService) => {
+      const uploadedImage = await this.supabaseStorageService.uploadImage(
+        file,
+        'birds',
+      );
+      return tr.birds.create({
+        data: {
+          ...data,
+          url: uploadedImage.url,
+        },
+      });
+    };
+    return this.prismaService.$transaction(transaction, { timeout: 50000 });
   }
 
   async findAll(params: Prisma.birdsFindManyArgs) {
