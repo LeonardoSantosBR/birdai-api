@@ -24,14 +24,22 @@ export class BirdsService {
       );
 
     const transaction = async (tr: PrismaService) => {
+      const { habitats, ...rest } = data;
       const uploadedImage = await this.supabaseStorageService.uploadImage(
         file,
         'birds',
       );
       return tr.birds.create({
         data: {
-          ...data,
+          ...rest,
           url: uploadedImage.url,
+          birdsHabitats: {
+            create: JSON.parse(habitats).map((id: number) => ({
+              habitat: {
+                connect: { id },
+              },
+            })),
+          },
         },
       });
     };

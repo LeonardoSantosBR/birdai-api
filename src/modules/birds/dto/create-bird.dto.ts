@@ -3,5 +3,5 @@ export class CreateBirdDto {
   cientific_name: string;
   url?: string;
   description: string;
-  habitats: Array<string>;
+  habitats: string;
 }
