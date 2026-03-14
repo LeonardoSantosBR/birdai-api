@@ -48,7 +48,17 @@ export class BirdsController {
     };
     const filter: any = birds_filter(querys);
     if (filter?.length) where.OR = filter;
-    const include: Prisma.birdsInclude = {};
+    const include: Prisma.birdsInclude = {
+      birdsHabitats: {
+        include: {
+          habitat: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    };
 
     const data = await this.birdsService.findAll({
       where,
