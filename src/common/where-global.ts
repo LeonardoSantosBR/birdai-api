@@ -59,7 +59,7 @@ export function whereGlobal(opt) {
     }
     if (type.includes('Like')) {
       ret.push({
-        [nameProp]: { contains: value },
+        [nameProp]: { contains: value, mode: 'insensitive' },
       });
     }
     if (type === optType.boolean) {
