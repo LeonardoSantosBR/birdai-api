@@ -8,6 +8,9 @@ import { BirdsRepository } from './birds.repository';
 import { birds, Prisma } from '@prisma/client';
 import { SupabaseStorageService } from 'src/services';
 import { PrismaService } from 'src/database';
+import { querySearchBird } from './querys';
+import { birds_filter } from 'src/filters';
+import { pagination_helper, pagination_prisma } from 'src/helpers';
 
 @Injectable()
 export class BirdsService {
@@ -46,12 +49,55 @@ export class BirdsService {
     return this.prismaService.$transaction(transaction, { timeout: 50000 });
   }
 
-  async findAll(params: Prisma.birdsFindManyArgs) {
+  async findAll(querys: querySearchBird) {
+    const page = +querys?.page;
+    const limit = +querys?.limit;
+    const orderBy: Prisma.birdsOrderByWithAggregationInput = querys?.order ?? {
+      created_at: 'desc',
+    };
+    const habitatsIds = querys.habitatsSelected
+      ? querys.habitatsSelected.split(',').map(Number)
+      : [];
+    const where: Prisma.birdsWhereInput = {
+      deleted_at: null,
+      ...(habitatsIds.length > 0 && {
+        AND: habitatsIds.map((habitatId) => ({
+          birdsHabitats: {
+            some: {
+              habitat_id: habitatId,
+            },
+          },
+        })),
+      }),
+    };
+
+    const filter: any = birds_filter(querys);
+    if (filter?.length) where.OR = filter;
+    const include: Prisma.birdsInclude = {
+      birdsHabitats: {
+        include: {
+          habitat: {
+            select: {
+              name: true,
+              color: true,
+            },
+          },
+        },
+      },
+    };
+    const params = {
+      where,
+      orderBy,
+      include,
+      ...pagination_prisma(limit, page),
+    };
+
     const [rows, count]: [birds[], number] = await Promise.all([
       this.birdsRepository.findAll(params),
       this.birdsRepository.count({ where: params.where || {} }),
     ]);
-    return { rows, count };
+
+    return pagination_helper(page, limit, count, rows);
   }
 
   async findOne(id?: number, arg?: Prisma.birdsFindFirstArgs) {

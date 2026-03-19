@@ -4,7 +4,7 @@ export const pagination_helper = (
   page: number,
   limit: number,
   count: number,
-  data: any,
+  rows: any,
 ) => {
   return {
     pagination: {
@@ -13,6 +13,6 @@ export const pagination_helper = (
       totalQuantity: count,
     },
     count: count,
-    rows: data?.rows,
+    rows: rows,
   };
 };
