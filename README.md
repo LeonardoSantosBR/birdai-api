@@ -1,3 +1,11 @@
 ## Api principal do app Birdai
 
--crud de aves (birds)
+-endpoints de aves (birds)
+{/birds, POST} 
+{/birds, GET} 
+{/birds/:id, GET} 
+{/birds/:id, PATCH} 
+{/birds/:id, DELETE}
+
+-endpoints de habitates (habitats)
+{/habitats, GET} 

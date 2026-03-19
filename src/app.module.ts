@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BirdsModule } from './modules/birds/birds.module';
 import { PrismaModule } from './database';
+import { HabitatsModule } from './modules/habitats/habitats.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PrismaModule } from './database';
     }),
     PrismaModule,
     BirdsModule,
+    HabitatsModule,
   ],
   controllers: [],
   providers: [],

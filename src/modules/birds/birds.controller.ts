@@ -43,8 +43,21 @@ export class BirdsController {
     const orderBy: Prisma.birdsOrderByWithAggregationInput = querys?.order ?? {
       created_at: 'desc',
     };
+    const habitatsIds = querys.habitatsSelected
+      ? querys.habitatsSelected.split(',').map(Number)
+      : [];
+
     const where: Prisma.birdsWhereInput = {
       deleted_at: null,
+      ...(habitatsIds.length > 0 && {
+        AND: habitatsIds.map((habitatId) => ({
+          birdsHabitats: {
+            some: {
+              habitat_id: habitatId,
+            },
+          },
+        })),
+      }),
     };
     const filter: any = birds_filter(querys);
     if (filter?.length) where.OR = filter;
@@ -54,6 +67,7 @@ export class BirdsController {
           habitat: {
             select: {
               name: true,
+              color: true,
             },
           },
         },

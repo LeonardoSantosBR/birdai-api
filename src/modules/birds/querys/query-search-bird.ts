@@ -1,2 +1,4 @@
 import { GlobalAllDto } from 'src/common';
-export class querySearchBird extends GlobalAllDto {}
+export class querySearchBird extends GlobalAllDto {
+  habitatsSelected: string;
+}
