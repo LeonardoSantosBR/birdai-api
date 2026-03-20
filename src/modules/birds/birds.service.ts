@@ -103,7 +103,23 @@ export class BirdsService {
   async findOne(id?: number, arg?: Prisma.birdsFindFirstArgs) {
     if (!id) throw new BadRequestException('Id não enviado.');
     const where = arg?.where || { id, deleted_at: null };
-    const query = await this.birdsRepository.findOne({ where, ...arg });
+    const include: Prisma.birdsInclude = {
+      birdsHabitats: {
+        include: {
+          habitat: {
+            select: {
+              name: true,
+              color: true,
+            },
+          },
+        },
+      },
+    };
+    const query = await this.birdsRepository.findOne({
+      where,
+      include,
+      ...arg,
+    });
     return query;
   }
 
