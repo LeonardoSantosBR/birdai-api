@@ -32,17 +32,27 @@ export class BirdsService {
         file,
         'birds',
       );
+
+      const hasHabitats = habitats?.length > 0;
+      const habitatsIds = hasHabitats
+        ? JSON.parse(habitats)?.map((id: number) => {
+            return id;
+          })
+        : [];
+
       return tr.birds.create({
         data: {
           ...rest,
           url: uploadedImage.url,
-          birdsHabitats: {
-            create: JSON.parse(habitats).map((id: number) => ({
-              habitat: {
-                connect: { id },
-              },
-            })),
-          },
+          birdsHabitats: hasHabitats
+            ? {
+                create: habitatsIds.map((id: number) => ({
+                  habitat: {
+                    connect: { id },
+                  },
+                })),
+              }
+            : {},
         },
       });
     };
