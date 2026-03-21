@@ -43,8 +43,13 @@ export class BirdsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBirdDto: UpdateBirdDto) {
-    return this.birdsService.update(+id, updateBirdDto);
+  @UseInterceptors(FileInterceptor('file'))
+  update(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updateBirdDto: UpdateBirdDto,
+  ) {
+    return this.birdsService.update(+id, file, updateBirdDto);
   }
 
   @Delete(':id')

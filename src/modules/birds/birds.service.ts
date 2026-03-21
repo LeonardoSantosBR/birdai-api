@@ -123,9 +123,44 @@ export class BirdsService {
     return query;
   }
 
-  update(id: number, data: UpdateBirdDto) {
+  update(id: number, file: Express.Multer.File, data: UpdateBirdDto) {
     if (!id) throw new BadRequestException('Id não enviado.');
-    return this.birdsRepository.update({ where: { id }, data });
+
+    const transaction = async (tr: PrismaService) => {
+      const { habitats, ...rest } = data;
+      const incomingHabitats: { habitat_id: number }[] = JSON.parse(habitats);
+      const incomingIds = incomingHabitats?.map((h) => h.habitat_id);
+
+      const uploadedImage = file
+        ? await this.supabaseStorageService.uploadImage(file, 'birds')
+        : null;
+
+      return tr.birds.update({
+        where: {
+          id,
+        },
+        data: {
+          ...rest,
+          ...(uploadedImage && { url: uploadedImage.url }),
+          birdsHabitats: {
+            deleteMany: {
+              habitat_id: { notIn: incomingIds },
+            },
+            upsert: incomingHabitats.map((h) => ({
+              where: {
+                bird_id_habitat_id: {
+                  bird_id: id,
+                  habitat_id: h.habitat_id,
+                },
+              },
+              create: { habitat_id: h.habitat_id },
+              update: {},
+            })),
+          },
+        },
+      });
+    };
+    return this.prismaService.$transaction(transaction, { timeout: 50000 });
   }
 
   remove(id: number) {
