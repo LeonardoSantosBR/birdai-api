@@ -29,7 +29,7 @@ model habitats {
 model birdsHabitats {
   bird_id    Int
   habitat_id Int
-  bird       birds    @relation(fields: [bird_id], references: [id])
+  bird       birds    @relation(fields: [bird_id], references: [id], onDelete: Cascade)
   habitat    habitats @relation(fields: [habitat_id], references: [id])
 
   @@id([bird_id, habitat_id])
