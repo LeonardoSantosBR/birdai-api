@@ -46,9 +46,11 @@ export class BirdsService {
           url: uploadedImage.url,
           birdsHabitats: hasHabitats
             ? {
-                create: habitatsIds.map((id: number) => ({
+                create: habitatsIds.map((dt: { habitat_id: number }) => ({
                   habitat: {
-                    connect: { id },
+                    connect: {
+                      id: dt.habitat_id,
+                    },
                   },
                 })),
               }
