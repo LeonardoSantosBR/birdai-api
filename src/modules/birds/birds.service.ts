@@ -11,6 +11,7 @@ import { PrismaService } from 'src/database';
 import { querySearchBird } from './querys';
 import { birds_filter } from 'src/filters';
 import { pagination_helper, pagination_prisma } from 'src/helpers';
+import { createHabitatsResume, updateDataResume } from './dt_resume';
 
 @Injectable()
 export class BirdsService {
@@ -44,17 +45,7 @@ export class BirdsService {
         data: {
           ...rest,
           url: uploadedImage.url,
-          birdsHabitats: hasHabitats
-            ? {
-                create: habitatsIds.map((dt: { habitat_id: number }) => ({
-                  habitat: {
-                    connect: {
-                      id: dt.habitat_id,
-                    },
-                  },
-                })),
-              }
-            : {},
+          birdsHabitats: createHabitatsResume(hasHabitats, habitatsIds),
         },
       });
     };
@@ -142,10 +133,14 @@ export class BirdsService {
       const { habitats, ...rest } = data;
       const incomingHabitats: { habitat_id: number }[] = JSON.parse(habitats);
       const incomingIds = incomingHabitats?.map((h) => h.habitat_id);
+      const bird = await tr.birds.findUnique({ where: { id } });
 
       const uploadedImage = file
         ? await this.supabaseStorageService.uploadImage(file, 'birds')
         : null;
+
+      if (uploadedImage)
+        await this.supabaseStorageService.deleteImage(bird.url);
 
       return tr.birds.update({
         where: {
@@ -154,29 +149,26 @@ export class BirdsService {
         data: {
           ...rest,
           ...(uploadedImage && { url: uploadedImage.url }),
-          birdsHabitats: {
-            deleteMany: {
-              habitat_id: { notIn: incomingIds },
-            },
-            upsert: incomingHabitats.map((h) => ({
-              where: {
-                bird_id_habitat_id: {
-                  bird_id: id,
-                  habitat_id: h.habitat_id,
-                },
-              },
-              create: { habitat_id: h.habitat_id },
-              update: {},
-            })),
-          },
+          birdsHabitats: updateDataResume(id, incomingIds, incomingHabitats),
+          updated_at: new Date(),
         },
       });
     };
     return this.prismaService.$transaction(transaction, { timeout: 50000 });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     if (!id) throw new BadRequestException('Id não enviado.');
-    return this.birdsRepository.delete({ where: { id } });
+
+    const transaction = async (tr: PrismaService) => {
+      const bird = await tr.birds.findUnique({ where: { id } });
+      await tr.birds.delete({ where: { id } });
+      return bird;
+    };
+    return this.prismaService
+      .$transaction(transaction, { timeout: 50000 })
+      .then(async (bird) => {
+        await this.supabaseStorageService.deleteImage(bird.url);
+      });
   }
 }
